@@ -1,0 +1,13 @@
+{
+  // Remove or comment out cmake.configureArgs if it only contains CMAKE_PREFIX_PATH
+  // "cmake.configureArgs": [
+  //     "-D CMAKE_PREFIX_PATH=/home/manojlo/Qt/6.9.0/gcc_64"
+  // ],
+
+  // Add this section instead:
+  "cmake.environment": {
+      "CMAKE_PREFIX_PATH": "/home/manojlo/Qt/6.9.0/gcc_64"
+  },
+
+  "cmake.generator": "Ninja" // Keep other settings
+}
