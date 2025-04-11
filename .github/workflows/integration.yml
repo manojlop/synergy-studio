@@ -1,0 +1,98 @@
+name: Synergy Studio CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'develop/server' # Trigger for server-specific branch
+      - 'develop/client' # Trigger for client-specific branch
+      - 'develop/common' # Trigger for common changes branch
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest] # Add macos-latest if needed
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # --- Dependency Setup (Platform Specific - Same as before) ---
+    - name: Install Linux dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build libgl1-mesa-dev qt6-base-dev qt6-tools-dev libqt6svg6-dev # Add more Qt modules if needed
+
+    - name: Install Windows dependencies (Qt via aqtinstall)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        python -m pip install --upgrade pip
+        pip install aqtinstall
+        aqt install-qt windows desktop 6.6.0 win64_msvc2019_64 -m qtbase qttools qtsvg # Adjust version/modules
+        echo "C:\Qt\6.6.0\msvc2019_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "C:\Qt\Tools\QtDesignStudio\qt6_design_studio_reduced_version\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "C:\Program Files\CMake\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    # --- Build Steps (Build everything regardless of trigger) ---
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -G Ninja `
+          ${{ runner.os == 'Windows' && '-D CMAKE_PREFIX_PATH=C:/Qt/6.6.0/msvc2019_64' || ''}} `
+          -D CMAKE_BUILD_TYPE=Release
+
+    - name: Build Project (including tests)
+      run: cmake --build build --config Release --parallel
+
+    # --- Conditional Test Execution ---
+
+    # Define environment variables for conditions (makes 'if' clauses cleaner)
+    - name: Set up test conditions
+      id: conditions
+      run: |
+        is_pr=${{ github.event_name == 'pull_request' }}
+        is_main_dev_common_branch=${{ github.ref_name == 'main' || github.ref_name == 'develop' || github.ref_name == 'develop/common' }}
+        is_server_branch=${{ github.ref_name == 'develop/server' }}
+        is_client_branch=${{ github.ref_name == 'develop/client' }}
+
+        echo "run_all_tests=$( [ $is_pr == 'true' ] || [ $is_main_dev_common_branch == 'true' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+        echo "run_server_tests=$( [ $is_server_branch == 'true' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+        echo "run_client_tests=$( [ $is_client_branch == 'true' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+
+    - name: Run All Tests (main/develop/common branches and PRs)
+      if: steps.conditions.outputs.run_all_tests == 'true'
+      working-directory: ./build
+      run: ctest --build-config Release --output-on-failure
+      # This runs tests WITH EITHER 'server_test' OR 'client_test' label, effectively all unit tests.
+      # If you add integration tests later without labels, this default ctest call will run them too.
+
+    - name: Run Server Tests Only (develop/server branch)
+      if: steps.conditions.outputs.run_server_tests == 'true'
+      working-directory: ./build
+      run: ctest --build-config Release --output-on-failure -L server_gtest
+      # Runs only tests explicitly labeled 'server_test'
+
+    - name: Run Client Tests Only (develop/client branch)
+      if: steps.conditions.outputs.run_client_tests == 'true'
+      working-directory: ./build
+      run: ctest --build-config Release --output-on-failure -L client_gtest
+      # Runs only tests explicitly labeled 'client_test'
+
+    # --- Placeholder for Integration Tests ---
+    # - name: Run Integration Tests (main/develop/common branches and PRs)
+    #   if: steps.conditions.outputs.run_all_tests == 'true'
+    #   run: |
+    #     # Add commands here to set up environment (maybe start docker?)
+    #     # Run integration test scripts/executables
+    #     echo "Running integration tests..."
+    #     # ./scripts/run_integration_tests.sh
