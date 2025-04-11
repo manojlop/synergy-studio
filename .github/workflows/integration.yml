@@ -5,9 +5,9 @@ on:
     branches:
       - main
       - develop
-      - 'develop/server'
-      - 'develop/client'
-      - 'develop/common'
+      - 'develop-server'
+      - 'develop-client'
+      - 'develop-common'
   pull_request:
     branches:
       - main
@@ -91,9 +91,9 @@ jobs:
       run: |
         # ...(same logic as before to set run_all_tests etc)...
         is_pr=${{ github.event_name == 'pull_request' }}
-        is_main_dev_common_branch=${{ github.ref_name == 'main' || github.ref_name == 'develop' || github.ref_name == 'develop/common' }}
-        is_server_branch=${{ github.ref_name == 'develop/server' }}
-        is_client_branch=${{ github.ref_name == 'develop/client' }}
+        is_main_dev_common_branch=${{ github.ref_name == 'main' || github.ref_name == 'develop' || github.ref_name == 'develop-common' }}
+        is_server_branch=${{ github.ref_name == 'develop-server' }}
+        is_client_branch=${{ github.ref_name == 'develop-client' }}
 
         echo "run_all_tests=$( [ $is_pr == 'true' ] || [ $is_main_dev_common_branch == 'true' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
         echo "run_server_tests=$( [ $is_server_branch == 'true' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
