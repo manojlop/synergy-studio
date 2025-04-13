@@ -4,8 +4,8 @@ add_executable(SynergyStudioServer)
 # List server-specific source files
 target_sources(SynergyStudioServer PRIVATE
     src/main.cpp
-    # src/SslServer.cpp
-    # src/SslServer.h
+    src/SslServer.cpp
+    include/SslServer.h
     # src/ClientConnection.cpp
     # src/ClientConnection.h
     # src/Session.cpp
@@ -24,6 +24,8 @@ target_link_libraries(SynergyStudioServer PRIVATE
     Qt6::Core
     Qt6::Network
     synergy_protocol # Link against the common library
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 if(BUILD_TESTING) # Standard CMake variable check

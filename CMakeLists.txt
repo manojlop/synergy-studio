@@ -18,6 +18,8 @@ find_package(Qt6 REQUIRED COMPONENTS
     Test # needed for unit tests (if with Qt Test -> TBD)
 )
 
+find_package(OpenSSL REQUIRED)
+
 # --- Qt Automatic Features ---
 # Enable AUTOMOC, AUTOUIC, AUTORCC for convenience
 set(CMAKE_AUTOMOC ON)
