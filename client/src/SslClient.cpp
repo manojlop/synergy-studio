@@ -23,35 +23,39 @@ SslClient::SslClient(QObject *parent) : QObject(parent) {
   QString serverCertPath = "cert.pem"; // Path to server certification path
   QList<QSslCertificate> serverCerts = QSslCertificate::fromPath(serverCertPath, QSsl::Pem);
   if(serverCerts.isEmpty()){
-    qWarning() << "Client: Failed to load server certificate from: " << serverCertPath;
+    qCritical() << "Client: CRITICAL FAILURE - Could not load server certificate from:" << serverCertPath;
+    qCritical() << "Client: Cannot proceed securely. Please ensure cert.pem exists and is valid.";
     // TBD : How to handle this?
+    // Option 1: Prevent connection attempts later
+    m_socket.setProperty("initializationFailed", true); // Use a dynamic property
+    // Option 2: Throw (if appropriate for app structure)
+    // throw std::runtime_error("Failed to load server CA cert");
   } else {
+    // Todo : cleanup
     QSslConfiguration config = m_socket.sslConfiguration(); // get current configuration
     QList<QSslCertificate> caCerts = config.caCertificates();
     caCerts.append(serverCerts.first()); // Add servers cert to the list of trusted CAs
     config.setCaCertificates(caCerts);
+    config.setProtocol(QSsl::TlsV1_2OrLater);
     m_socket.setSslConfiguration(config);
     qInfo() << "Client: Configured to trust server's self signed certificate.";
-    m_ignoreSslErrors = false; 
   }
-
-  // qWarning() << "Client: Configured to potentially ignore SSL errors (Example mode)."
-  //           << "Reccomend adding server certificate to CA list instead (see code comments)";
-  // m_ignoreSslErrors = true;
-
-  // protocol client-side coul be set if needed, but usually defaults are fine.
-  // QSslConfiguration config = m_socket.sslConfiguration();
-  // config.setProtocol(QSsl::TlsV1_2OrLater);
-  // m_socket.setSslConfiguration(config);
 }
 
 // Initiate connection
 void SslClient::connectToServer(const QString &host, quint16 port){
+  if (m_socket.property("initializationFailed").toBool()) {
+    qCritical() << "Client: Cannot connect, initialization failed (CA cert missing?).";
+    return;
+  }
   qInfo() << "Client: Attempting to connect to: " << host << ":" << port << " using SSL...";
   // Initiate TCP connection and start SSL/TLS handshake immediately after TCP connects
-  m_socket.connectToHostEncrypted(host, port);
+  // m_socket.connectToHostEncrypted(host, port);
+  // ^ Doesn't strictly verify that the hostname/IP in the certificate's Common Name (CN)
+  // or Subject Alternative Name (SAN) matches the host connected to
   // If server's name is to be verified agains the certificate:
-  // m_socket.connectToHostEncrypted(host, port, host);
+  // Ensure self-signed certificate is generated with the correct CN or SAN
+  m_socket.connectToHostEncrypted(host, port, host);
 }
 
 // Slot: Connected (TCP level)
@@ -98,31 +102,9 @@ void SslClient::onSslErrors(const QList<QSslError> &errors){
 
     for (const QSslError &error : errors) {
         qWarning() << "-" << error.errorString();
-        // Security Critical: Handling Specific Errors
-        // Explanation: Check if the error is one we expect due to the self-signed cert.
-        if (m_ignoreSslErrors && (error.error() == QSslError::SelfSignedCertificate ||
-                error.error() == QSslError::SelfSignedCertificateInChain ||
-                error.error() == QSslError::UnableToGetLocalIssuerCertificate ||
-                 error.error() == QSslError::CertificateUntrusted) ){
-            qWarning() << "Client: --> Ignoring expected self-signed certificate error (Example Mode).";
-            ignorableErrors.append(error);
-        }
     }
 
-    // Security Critical: Calling ignoreSslErrors 
-    // Explanation: If we decided to ignore certain errors (based on our flag and checks above),
-    // we MUST call ignoreSslErrors() with the list of errors to ignore. Otherwise,
-    // the handshake will fail and the socket will likely disconnect.
-    //
-    // * THIS IS THE DANGEROUS PART IN PRODUCTION *
-    // Blindly ignoring errors defeats the purpose of SSL authentication.
-    // Only ignore errors if you have explicitly validated the certificate out-of-band
-    // or if you are using the "Add Server Cert as CA" method (Option 1), in which case
-    // you shouldn't get these errors and wouldn't need to ignore them.
-    if (!ignorableErrors.isEmpty()) {
-      m_socket.ignoreSslErrors(ignorableErrors);
-      qWarning() << "Client: Called ignoreSslErrors() for specific self-signed related errors.";
-    } else if (!errors.isEmpty()) {
+    if (!errors.isEmpty()) {
       // If there were other errors we didn't choose to ignore
       qWarning() << "Client: Unignored SSL errors occurred. Connection will likely fail.";
       // m_socket.abort(); // Optionally force close immediately

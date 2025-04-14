@@ -27,7 +27,7 @@ private slots:
 
 private:
   QSslSocket m_socket;
-  bool m_ignoreSslErrors = false; 
+
 };
 
 #endif

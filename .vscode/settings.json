@@ -84,6 +84,7 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "qsslserver": "cpp"
+    "qsslserver": "cpp",
+    "qdebug": "cpp"
   } // Keep other settings
 }

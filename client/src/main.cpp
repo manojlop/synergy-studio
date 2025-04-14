@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
 
 
   // Close down after some time for automated testing
-  // QTimer::singleShot(10000, &a, &QCoreApplication::quit); // Quit after 10 seconds
+  QTimer::singleShot(5000, &a, &QCoreApplication::quit); // Quit after 5 seconds
 
 
   qInfo() << "Starting event loop...";

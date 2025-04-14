@@ -3,6 +3,9 @@
 #include <QCoreApplication> // for error checking
 
 SslServer::SslServer(QObject *parent) : QSslServer(parent) {
+  // Setting up SSL configuration -> defining rules for ssl connections
+  m_sslConfiguration = QSslConfiguration::defaultConfiguration();
+
   /*
   ------------------------------------------------------------
   ------------------- Critical for security ------------------
@@ -20,23 +23,24 @@ SslServer::SslServer(QObject *parent) : QSslServer(parent) {
   if(!loadCertAndKey("cert.pem", "key.pem")){
     qCritical() << "Failed to load certificate or key file. Server cannot start securely.";
     // Exit and disable SSL feature
-    QCoreApplication::exit(1);
+    // QCoreApplication::exit(1);
+    // TBD : Two phase init or return with factory, as object wont be constructed
+    throw std::runtime_error("SSL init failed");
+    return;
   }
 
-  // Setting up SSL configuration -> defining rules for ssl connections
-  QSslConfiguration config = QSslConfiguration::defaultConfiguration();
-  config.setLocalCertificate(m_sslConfiguration.localCertificate()); // use loaded certificate
-  config.setPrivateKey(m_sslConfiguration.privateKey()); // use loaded key
+  // QSslConfiguration config = QSslConfiguration::defaultConfiguration();
+  // config.setLocalCertificate(m_sslConfiguration.localCertificate()); // use loaded certificate
+  // config.setPrivateKey(m_sslConfiguration.privateKey()); // use loaded key
 
   // Setting allowed SSL/TLS protocol
   // Using newer (1.2 or 1.3) prevents known vulnerabilites
-  config.setProtocol(QSsl::TlsV1_2OrLater); // TLS 1.2 or higher
+  m_sslConfiguration.setProtocol(QSsl::TlsV1_2OrLater);
 
-  // Customize cipher suite for higher security, but Qt usually picks reasonable defaults
-  // config.setCiphers(...);
+  // TODO: Consider explicitly setting strong cipher suites if needed later.
+  // m_sslConfiguration.setCiphers(...);
 
-  QSslConfiguration::setDefaultConfiguration(config); // make this default for new QSslSockets
-  m_sslConfiguration = config; // Store for potential later use if needed
+  QSslConfiguration::setDefaultConfiguration(m_sslConfiguration);
 
   qInfo() << "Server SSL configuration prepared";
 }
@@ -122,7 +126,7 @@ void SslServer::incomingConnection(qintptr socketDescriptor){
   Apply SSL setting (cert, key, protocol) we prepared earlier
   We can also set specific configuration per-socket if needed
   */
-  // sslSocket->setSslConfiguration(m_sslConfiguration); // usually not needed if default is set
+  sslSocket->setSslConfiguration(m_sslConfiguration); // usually not needed if default is set
 
   // Connect signals from new socket to our server slots before starting encryption, so we can handle errors/events during handshake
   connect(sslSocket, &QSslSocket::readyRead, this, &SslServer::onReadyRead);
@@ -140,7 +144,7 @@ void SslServer::incomingConnection(qintptr socketDescriptor){
   sslSocket->startServerEncryption();
 
   // Add socket to our list after setup seems okay
-  m_clients.append(sslSocket);
+  m_clients.insert(socketDescriptor, sslSocket);
 
   qInfo() << "QSslSocket created for descriptor: " << socketDescriptor << "starting encryption...";
 }
@@ -170,11 +174,12 @@ void SslServer::onDisconnected(){
   qInfo() << "Client disconnected: " << clientSocket->peerAddress() << ":" << clientSocket->peerPort();
 
   // Remove socket from tracking list
-  m_clients.removeAll(clientSocket);
+  m_clients.remove(clientSocket->socketDescriptor());
 
   // Use deleteLater to safely remove QObject from within a slot connected to one of its signals
   // This schedules deletion after the event loop returns
   clientSocket->deleteLater();
+  // #endif
 }
 
 // Slot SSl Error occured

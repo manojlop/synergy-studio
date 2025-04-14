@@ -6,7 +6,7 @@
 #include <QSslConfiguration>
 #include <QSslKey>
 #include <QSslCertificate>
-#include <QList>
+#include <QHash>
 #include <QFile>
 #include <QDebug>
 
@@ -28,7 +28,7 @@ private slots:
 
 private:
   QSslConfiguration m_sslConfiguration;
-  QList<QSslSocket*> m_clients; // Keep track of connected clients
+  QHash<qintptr, QSslSocket*> m_clients; // Keep track of connected clients
 
   bool loadCertAndKey(const QString &certPath, const QString &keyPath);
 };
