@@ -980,7 +980,7 @@ This section provides high-level considerations and guidelines for the internal 
 The implementation SHOULD utilize well-defined C++ classes adhering to principles like SOLID and RAII. Conceptual structures include:
 
 *   **11.1.1. Server (`SynergyStudioServer`):**
-    *   `TcpServer` / `SslServer`: Manages the listening socket, accepts incoming connections, initiates TLS handshakes (potentially using `QTcpServer` and `QSslSocket`).
+    *   `SslServer`: Manages the listening socket, accepts incoming connections, initiates TLS handshakes (potentially using `QSslServer` and `QSslSocket`).
     *   `ClientConnection`: Represents a single connected client. Handles the `QSslSocket` for that client, message framing/parsing, dispatches received messages, holds client-specific state (e.g., `userId`, associated `Session` pointer). Utilizes RAII for socket management.
     *   `SessionManager`: A central repository (e.g., using `std::map<SessionId, std::shared_ptr<Session>>`) holding all active sessions. Handles creation, lookup, and destruction of `Session` objects.
     *   `Session`: Encapsulates the state of a single collaborative session (list of participating `ClientConnection` pointers/references, active file path, canvas state, pointer to `WorkspaceManager` and `DockerExecutor`). Orchestrates broadcasting.

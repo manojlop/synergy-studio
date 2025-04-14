@@ -18,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -33,36 +34,46 @@ jobs:
         sudo apt-get update -qq
         sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build libgl1-mesa-dev qt6-base-dev qt6-tools-dev libqt6svg6-dev libxkbcommon-dev # Added libxkbcommon-dev for XKB warning
 
-    - name: Set up Python 3.10+ for Windows
-      if: runner.os == 'Windows'
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12' # Or '3.10', '3.12' - Recommend 3.11+
+    # - name: Set up Python 3.10+ for Windows
+    #   if: runner.os == 'Windows'
+    #   uses: actions/setup-python@v5
+    #   with:
+    #     python-version: '3.12' # Or '3.10', '3.12' - Recommend 3.11+
+    
+    # - name: Build OpenSSL for MinGW
+    #   if: runner.os == 'Windows'
+    #   run: |
+    #     git clone https://github.com/openssl/openssl.git
+    #     cd openssl
+    #     git checkout OpenSSL_1_1_1-stable
+    #     perl Configure mingw64 no-shared --prefix=C:/OpenSSL
+    #     mingw32-make
+    #     mingw32-make install
 
-    - name: List available Qt modules (Debug)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        python -m pip install --upgrade pip
-        pip install aqtinstall # Need it installed first
-        aqt list-qt windows desktop --arch 6.9.0
-        aqt list-qt windows desktop --modules 6.9.0 win64_mingw
-
+    # - name: List available Qt modules (Debug)
+    #   if: runner.os == 'Windows'
+    #   shell: pwsh
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install aqtinstall # Need it installed first
+    #     aqt list-qt windows desktop --arch 6.9.0
+    #     aqt list-qt windows desktop --modules 6.9.0 win64_mingw
+    
     # https://ddalcino.github.io/aqt-list-server/
-    - name: Install Windows dependencies (Qt via jurplel actions)
-      if: runner.os == 'Windows'
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.9.0'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_mingw'
-        dir: 'C:/Qt/6.9.0/'
-
-    - name: Set Qt CMAKE_PREFIX_PATH for Windows
-      if: runner.os == 'Windows'
-      # Update path environment variable to match installed architecture: msvc2022_64
-      run: echo "CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw" >> $GITHUB_ENV
+    # - name: Install Windows dependencies (Qt via jurplel actions)
+    #   if: runner.os == 'Windows'
+    #   uses: jurplel/install-qt-action@v4
+    #   with:
+    #     version: '6.9.0'
+    #     host: 'windows'
+    #     target: 'desktop'
+    #     arch: 'win64_mingw'
+    #     dir: 'C:/Qt/6.9.0/'
+    
+    # - name: Set Qt CMAKE_PREFIX_PATH for Windows
+    #   if: runner.os == 'Windows'
+    #   # Update path environment variable to match installed architecture: msvc2022_64
+    #   run: echo "CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw" >> $GITHUB_ENV
 
     - name: Set Qt CMAKE_PREFIX_PATH for Linux
       if: runner.os == 'Linux'
@@ -71,16 +82,16 @@ jobs:
       # Use default shell (bash on Linux)
 
     # --- Build Steps ---
-    - name: Configure CMake Windows
-      if: runner.os == 'Windows'
-      # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release
-      # Use default shell (bash/pwsh)
+    # - name: Configure CMake Windows
+    #   if: runner.os == 'Windows'
+    #   # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
+    #   run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR=C:/OpenSSL -D OPENSSL_INCLUDE_DIR=C:/OpenSSL/include -D OPENSSL_CRYPTO_LIBRARY=C:/OpenSSL/lib/libcrypto.a -D OPENSSL_SSL_LIBRARY=C:/OpenSSL/lib/libssl.a
+    #   # Use default shell (bash/pwsh)
     
     - name: Configure CMake Linux
       if: runner.os == 'Linux'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw
+      run: cmake -B build -S . -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw 
 
     - name: Build Project (including tests)
       run: cmake --build build --config Release --parallel
