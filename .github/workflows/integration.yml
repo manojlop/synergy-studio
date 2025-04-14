@@ -59,17 +59,20 @@ jobs:
         arch: 'win64_mingw'
         dir: 'C:/Qt/6.9.0/'
 
-    # Install OpenSSL
-    - name: Install OpenSSL
+    # Install OpenSSL - using vcpkg for more reliable installation
+    - name: Set up vcpkg
+      if: runner.os == 'Windows'
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: '5568f110b509a9fd90711978a7cb76bae75bb092'
+    
+    - name: Install OpenSSL via vcpkg
       if: runner.os == 'Windows'
       run: |
-        $openssl_url = "https://slproweb.com/download/Win64OpenSSL-3_1_4.exe"
-        $output_file = "$env:RUNNER_TEMP\openssl_installer.exe"
-        Invoke-WebRequest -Uri $openssl_url -OutFile $output_file
-        Start-Process -FilePath $output_file -Args "/silent /verysilent /sp- /suppressmsgboxes" -Wait
-        echo "OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
-        echo "OPENSSL_LIBRARIES=C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
-        echo "C:\Program Files\OpenSSL-Win64\bin" >> $env:GITHUB_PATH
+        vcpkg install openssl:x64-windows
+        echo "OPENSSL_ROOT_DIR=$env:VCPKG_ROOT/installed/x64-windows" >> $env:GITHUB_ENV
+        echo "OPENSSL_LIBRARIES=$env:VCPKG_ROOT/installed/x64-windows/lib" >> $env:GITHUB_ENV
+        echo "$env:VCPKG_ROOT/installed/x64-windows/bin" >> $env:GITHUB_PATH
     
     - name: Set Qt CMAKE_PREFIX_PATH for Windows
       if: runner.os == 'Windows'
