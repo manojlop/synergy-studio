@@ -39,19 +39,24 @@ jobs:
       with:
         python-version: '3.12' # Or '3.10', '3.12' - Recommend 3.11+
     
-    - name: Install OpenSSL on Windows
+    - name: Build OpenSSL for MinGW
       if: runner.os == 'Windows'
       run: |
-        choco install openssl --no-progress -y
+        git clone https://github.com/openssl/openssl.git
+        cd openssl
+        git checkout OpenSSL_1_1_1-stable
+        perl Configure mingw64 no-shared --prefix=C:/OpenSSL
+        mingw32-make
+        mingw32-make install
 
-    - name: List available Qt modules (Debug)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        python -m pip install --upgrade pip
-        pip install aqtinstall # Need it installed first
-        aqt list-qt windows desktop --arch 6.9.0
-        aqt list-qt windows desktop --modules 6.9.0 win64_mingw
+    # - name: List available Qt modules (Debug)
+    #   if: runner.os == 'Windows'
+    #   shell: pwsh
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install aqtinstall # Need it installed first
+    #     aqt list-qt windows desktop --arch 6.9.0
+    #     aqt list-qt windows desktop --modules 6.9.0 win64_mingw
     
     # https://ddalcino.github.io/aqt-list-server/
     - name: Install Windows dependencies (Qt via jurplel actions)
@@ -74,19 +79,12 @@ jobs:
       # Replace with YOUR correct Qt path for Linux runner
       run: echo "CMAKE_PREFIX_PATH=/home/runner/Qt/6.9.0/gcc_64" >> $GITHUB_ENV # <--- Check if this path exists on runner, or if you installed Qt differently
       # Use default shell (bash on Linux)
-    
-    - name: Debug OpenSSL install
-      if: runner.os == 'Windows'
-      run: |
-        dir "C:\Program Files\OpenSSL-Win64"
-        dir "C:\Program Files\OpenSSL-Win64\include"
-        dir "C:\Program Files\OpenSSL-Win64\lib"
 
     # --- Build Steps ---
     - name: Configure CMake Windows
       if: runner.os == 'Windows'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR="C:/Program Files/OpenSSL-Win64"
+      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR=C:/OpenSSL
       # Use default shell (bash/pwsh)
     
     - name: Configure CMake Linux
