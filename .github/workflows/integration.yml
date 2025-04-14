@@ -59,6 +59,18 @@ jobs:
         arch: 'win64_mingw'
         dir: 'C:/Qt/6.9.0/'
 
+    # Install OpenSSL
+    - name: Install OpenSSL
+      if: runner.os == 'Windows'
+      run: |
+        $openssl_url = "https://slproweb.com/download/Win64OpenSSL-3_1_4.exe"
+        $output_file = "$env:RUNNER_TEMP\openssl_installer.exe"
+        Invoke-WebRequest -Uri $openssl_url -OutFile $output_file
+        Start-Process -FilePath $output_file -Args "/silent /verysilent /sp- /suppressmsgboxes" -Wait
+        echo "OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+        echo "OPENSSL_LIBRARIES=C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
+        echo "C:\Program Files\OpenSSL-Win64\bin" >> $env:GITHUB_PATH
+    
     - name: Set Qt CMAKE_PREFIX_PATH for Windows
       if: runner.os == 'Windows'
       # Update path environment variable to match installed architecture: msvc2022_64
@@ -74,7 +86,7 @@ jobs:
     - name: Configure CMake Windows
       if: runner.os == 'Windows'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release
+      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64" -DOPENSSL_LIBRARIES="C:\Program Files\OpenSSL-Win64\lib"
       # Use default shell (bash/pwsh)
     
     - name: Configure CMake Linux
