@@ -84,7 +84,7 @@ jobs:
     - name: Configure CMake Windows
       if: runner.os == 'Windows'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR=C:/OpenSSL
+      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR=C:/OpenSSL -D OPENSSL_INCLUDE_DIR=C:/OpenSSL/include -D OPENSSL_CRYPTO_LIBRARY=C:/OpenSSL/lib/libcrypto.a -D OPENSSL_SSL_LIBRARY=C:/OpenSSL/lib/libssl.a
       # Use default shell (bash/pwsh)
     
     - name: Configure CMake Linux
