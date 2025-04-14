@@ -38,6 +38,11 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12' # Or '3.10', '3.12' - Recommend 3.11+
+    
+    - name: Install OpenSSL on Windows
+      if: runner.os == 'Windows'
+      run: |
+        choco install openssl --no-progress -y
 
     - name: List available Qt modules (Debug)
       if: runner.os == 'Windows'
@@ -47,7 +52,7 @@ jobs:
         pip install aqtinstall # Need it installed first
         aqt list-qt windows desktop --arch 6.9.0
         aqt list-qt windows desktop --modules 6.9.0 win64_mingw
-
+    
     # https://ddalcino.github.io/aqt-list-server/
     - name: Install Windows dependencies (Qt via jurplel actions)
       if: runner.os == 'Windows'
@@ -58,21 +63,6 @@ jobs:
         target: 'desktop'
         arch: 'win64_mingw'
         dir: 'C:/Qt/6.9.0/'
-
-    # Install OpenSSL - using vcpkg for more reliable installation
-    - name: Set up vcpkg
-      if: runner.os == 'Windows'
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: '5568f110b509a9fd90711978a7cb76bae75bb092'
-    
-    - name: Install OpenSSL via vcpkg
-      if: runner.os == 'Windows'
-      run: |
-        vcpkg install openssl:x64-windows
-        echo "OPENSSL_ROOT_DIR=$env:VCPKG_ROOT/installed/x64-windows" >> $env:GITHUB_ENV
-        echo "OPENSSL_LIBRARIES=$env:VCPKG_ROOT/installed/x64-windows/lib" >> $env:GITHUB_ENV
-        echo "$env:VCPKG_ROOT/installed/x64-windows/bin" >> $env:GITHUB_PATH
     
     - name: Set Qt CMAKE_PREFIX_PATH for Windows
       if: runner.os == 'Windows'
@@ -84,18 +74,25 @@ jobs:
       # Replace with YOUR correct Qt path for Linux runner
       run: echo "CMAKE_PREFIX_PATH=/home/runner/Qt/6.9.0/gcc_64" >> $GITHUB_ENV # <--- Check if this path exists on runner, or if you installed Qt differently
       # Use default shell (bash on Linux)
+    
+    - name: Debug OpenSSL install
+      if: runner.os == 'Windows'
+      run: |
+        dir "C:\Program Files\OpenSSL-Win64"
+        dir "C:\Program Files\OpenSSL-Win64\include"
+        dir "C:\Program Files\OpenSSL-Win64\lib"
 
     # --- Build Steps ---
     - name: Configure CMake Windows
       if: runner.os == 'Windows'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64" -DOPENSSL_LIBRARIES="C:\Program Files\OpenSSL-Win64\lib"
+      run: cmake -B build -S . -G Ninja -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw -D CMAKE_BUILD_TYPE=Release -D OPENSSL_ROOT_DIR="C:/Program Files/OpenSSL-Win64"
       # Use default shell (bash/pwsh)
     
     - name: Configure CMake Linux
       if: runner.os == 'Linux'
       # Now the cmake command is simpler, CMAKE_PREFIX_PATH comes from env
-      run: cmake -B build -S . -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw
+      run: cmake -B build -S . -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_PREFIX_PATH=C:/Qt/6.9.0/mingw 
 
     - name: Build Project (including tests)
       run: cmake --build build --config Release --parallel
