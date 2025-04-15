@@ -1,5 +1,5 @@
 # Define the shared library for protocol and common utilities
-# add_library(synergy_protocol STATIC) # Or INTERFACE if header-only
+# add_library(synergy_protocol STATIC) 
 add_library(synergy_protocol INTERFACE) # Or INTERFACE if header-only
 
 # List public headers (adjust path if necessary)
@@ -13,7 +13,8 @@ target_include_directories(synergy_protocol INTERFACE
 )
 
 # List source files (if any)
-# Example: target_sources(synergy_protocol PRIVATE src/serialization.cpp)
+target_sources(synergy_protocol INTERFACE 
+    ./include/synergy_protocol/protocol.h)
 
 # Link dependencies needed by the common library itself
 # Example: If using QJsonObject for serialization
