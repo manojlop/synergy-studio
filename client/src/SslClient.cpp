@@ -70,7 +70,9 @@ void SslClient::onEncrypted(){
   qInfo() << "Client: SSL Handshake successful! Connection is now encrypted.";
   qInfo() << "Client: Cipher used:" << m_socket.sessionCipher().name();
   // Now it's safe to send application data securely.
-  sendMessage("Hello Secure Server!");
+  // sendMessage("Hello Secure Server!");
+  SynergyProtocol::Message_Join_Session_Request join_msg {QString(""), true, QString("Client")};
+  sendMessage(QJsonDocument(join_msg.toJSon()).toJson());
 }
 
 // Slot: Disconnected
