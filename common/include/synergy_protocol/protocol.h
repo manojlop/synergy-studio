@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QHash>
 
 #include <vector>

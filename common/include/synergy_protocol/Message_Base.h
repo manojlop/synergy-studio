@@ -15,10 +15,6 @@ namespace SynergyProtocol {
     void setVersion(const SynergyProtocol::t_Versions& version) { m_version = version; }
     qintptr clientId() const { return m_id; }
 
-    virtual inline QString toString() const {
-      return QJsonDocument(this->toJSon()).toJson();
-    }
-
     // Serialize entire message to JSON
     virtual QJsonObject toJSon() const {
       QJsonObject obj;
@@ -28,6 +24,10 @@ namespace SynergyProtocol {
       obj["payload"] = payloadToJson(); // delegate payload creation
       // TBD : should we add seq_id here or in payload later?
       return obj;
+    }
+
+    virtual inline QString toString() const {
+      return QJsonDocument(this->toJSon()).toJson();
     }
 
     // Deserialize common fields from a full JSON message object
