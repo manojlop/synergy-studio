@@ -27,7 +27,7 @@ namespace SynergyProtocol {
     }
 
     virtual inline QString toString() const {
-      return QJsonDocument(this->toJSon()).toJson();
+      return QJsonDocument(this->toJSon()).toJson(QJsonDocument::Compact);
     }
 
     // Deserialize common fields from a full JSON message object
@@ -57,7 +57,6 @@ namespace SynergyProtocol {
     }
 
   protected:
-    Message_Base(qintptr id) : m_id(id) {} 
 
     // Derived classes implement how their specific payload is built/parsed
     virtual QJsonObject payloadToJson() const = 0;

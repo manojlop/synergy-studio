@@ -169,9 +169,7 @@ void SslServer::onReadyRead(){
   }
 
   std::unique_ptr<SynergyProtocol::Message_Base> message 
-    = SynergyProtocol::MessageFactory::instance().createMessage(
-      json_doc.object(), (json_doc.object()).value("id").toInt()
-    );
+    = SynergyProtocol::MessageFactory::instance().createMessage(json_doc.object());
 
   if(message) {
     qInfo() << "Server received message type:" << SynergyProtocol::messageTypeToString(message->type());

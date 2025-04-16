@@ -16,11 +16,12 @@ namespace SynergyProtocol {
     bool shouldCreateNew() const { return m_create_new; }
     const QString& username() const { return m_username; }
 
-    explicit Message_Join_Session_Request(qintptr id, QString sid = "", bool create = false, QString name = "") :
-      Message_Base(id),
+    explicit Message_Join_Session_Request(qintptr id = 0, QString sid = "", bool create = false, QString name = "") :
       m_session_id_to_join(std::move(sid)),
       m_create_new(create),
-      m_username(std::move(name)) {}
+      m_username(std::move(name)) { 
+        m_id = id;
+      }
 
   protected:
     QString m_session_id_to_join;

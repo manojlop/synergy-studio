@@ -12,7 +12,7 @@
 #include "Message_Join_Session_Request.h"
 
 namespace SynergyProtocol {
-  using MessageCreatorFunc = std::function<std::unique_ptr<Message_Base>(qintptr id)>;
+  using MessageCreatorFunc = std::function<std::unique_ptr<Message_Base>()>;
 
   class MessageFactory {
   public:
@@ -27,7 +27,7 @@ namespace SynergyProtocol {
       return factory;
     }
 
-    std::unique_ptr<Message_Base> createMessage(const QJsonObject& jsonObject, qintptr id) const;
+    std::unique_ptr<Message_Base> createMessage(const QJsonObject& jsonObject) const;
   
   private:
     MessageFactory() = default; // Private constructor for singleton-like pattern

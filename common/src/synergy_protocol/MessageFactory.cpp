@@ -2,7 +2,7 @@
 
 using namespace SynergyProtocol;
 
-std::unique_ptr<Message_Base> MessageFactory::createMessage(const QJsonObject& jsonObject, qintptr id) const {
+std::unique_ptr<Message_Base> MessageFactory::createMessage(const QJsonObject& jsonObject) const {
   if(!jsonObject.contains("type") || !jsonObject["type"].isString()) {
     qCritical() << "MESSAGE FACTORY | JSON missing 'type' string";
     return nullptr;
@@ -11,7 +11,7 @@ std::unique_ptr<Message_Base> MessageFactory::createMessage(const QJsonObject& j
   QString messageTypeStr = jsonObject["type"].toString();
   if(m_creators.contains(messageTypeStr)) {
     // We create empty object using registered function
-    std::unique_ptr<Message_Base> message = m_creators[messageTypeStr](id);
+    std::unique_ptr<Message_Base> message = m_creators[messageTypeStr]();
 
     // Populate it using its virtual fromJson method
     if(message && message->fromJson(jsonObject)){
@@ -30,7 +30,7 @@ std::unique_ptr<Message_Base> MessageFactory::createMessage(const QJsonObject& j
 // We map type string to function that creates the corresponding C++ object
 void MessageFactory::registerMessages() {
   m_creators.insert(messageTypeToString(t_MessageType::JOIN_SESSION_REQUEST),
-                    [](qintptr id) { return std::make_unique<Message_Join_Session_Request>(id); });
+                    []() { return std::make_unique<Message_Join_Session_Request>(); });
 
   
   // m_creators.insert(messageTypeToString(t_MessageType::TEXT_EDIT),
