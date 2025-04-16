@@ -85,6 +85,7 @@
     "typeinfo": "cpp",
     "variant": "cpp",
     "qsslserver": "cpp",
-    "qdebug": "cpp"
+    "qdebug": "cpp",
+    "qjsonobject": "cpp"
   } // Keep other settings
 }

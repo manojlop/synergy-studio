@@ -158,12 +158,31 @@ void SslServer::onReadyRead(){
   // Read all available data from encrypted socket
   QByteArray data = clientSocket->readAll();
   qInfo() << "Recieved from client: " << data;
+  auto json_doc = QJsonDocument::fromJson(data);
+  if(json_doc.isNull()){
+    qDebug()<<"Failed to create JSON doc.";
+    exit(2);
+  }
+  if(!json_doc.isObject()){
+    qDebug()<<"JSON is not an object.";
+    exit(3);
+  }
 
-  // Echo data back to client
-  QString response = "Server recieved: " + QString::fromUtf8(data);
-  // Write data back. Qt handles encryption automatically
-  clientSocket->write(response.toUtf8());
-  // clientSocket->flush(); // Qt buffers writes
+  std::unique_ptr<SynergyProtocol::Message_Base> message 
+    = SynergyProtocol::MessageFactory::instance().createMessage(
+      json_doc.object(), (json_doc.object()).value("id").toInt()
+    );
+
+  if(message) {
+    qInfo() << "Server received message type:" << SynergyProtocol::messageTypeToString(message->type());
+    // Echo data back to client
+    QString response = "Server recieved command: " + SynergyProtocol::messageTypeToString(message->type()) + " from " + ((message->toJSon())["payload"].toObject()["username"].toString());
+    // Write data back. Qt handles encryption automatically
+    clientSocket->write(response.toUtf8());
+  } else {
+    qWarning() << "Factory failed to create message object or parse JSON payload from client:" << clientSocket->peerAddress();
+  }
+
 }
 
 // Slots - Client Disconnected

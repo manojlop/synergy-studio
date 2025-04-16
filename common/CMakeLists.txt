@@ -1,28 +1,38 @@
 # Define the shared library for protocol and common utilities
-# add_library(synergy_protocol STATIC) 
-add_library(synergy_protocol INTERFACE) # Or INTERFACE if header-only
+add_library(synergy_protocol STATIC) 
+# add_library(synergy_protocol INTERFACE) # Or INTERFACE if header-only
 
 # List public headers (adjust path if necessary)
-# target_include_directories(synergy_protocol PUBLIC
-#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#     $<INSTALL_INTERFACE:include> # For potential installation
-# )
-target_include_directories(synergy_protocol INTERFACE
+target_include_directories(synergy_protocol PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include> # For potential installation
 )
+# target_include_directories(synergy_protocol INTERFACE
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include> # For potential installation
+# )
 
-# List source files (if any)
-target_sources(synergy_protocol INTERFACE 
-    ./include/synergy_protocol/protocol.h)
+# List source files
+target_sources(synergy_protocol PRIVATE 
+  ./include/synergy_protocol/protocol.h
+  ./src/synergy_protocol/protocol.cpp
+  ./include/synergy_protocol/Message_Base.h
+  ./src/synergy_protocol/Message_Base.cpp
+  ./include/synergy_protocol/Message_Join_Session_Request.h
+  ./src/synergy_protocol/Message_Join_Session_Request.cpp
+  ./include/synergy_protocol/MessageFactory.h
+  ./src/synergy_protocol/MessageFactory.cpp)
+# target_sources(synergy_protocol INTERFACE 
+#     ./include/synergy_protocol/protocol.h)
 
 # Link dependencies needed by the common library itself
 # Example: If using QJsonObject for serialization
-# target_link_libraries(synergy_protocol PUBLIC Qt6::Core)
-target_link_libraries(synergy_protocol INTERFACE Qt6::Core)
+target_link_libraries(synergy_protocol PUBLIC Qt6::Core)
+# target_link_libraries(synergy_protocol INTERFACE Qt6::Core)
 
 # Ensure common library uses the correct C++ standard
-target_compile_features(synergy_protocol INTERFACE cxx_std_20)
+target_compile_features(synergy_protocol PRIVATE cxx_std_20)
+# target_compile_features(synergy_protocol INTERFACE cxx_std_20)
 
 # An INTERFACE library in CMake is essentially a collection of usage requirements. It's used when you have a library that is entirely defined by its header files (a "header-only" library) or when you want to group usage requirements together without creating an actual compiled artifact (.a or .so file).
 
