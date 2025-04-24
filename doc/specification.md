@@ -187,7 +187,7 @@ The Synergy Studio system adheres to a client-server architectural pattern. Mult
 *   The **Docker Engine** runs as a separate daemon process on the Server host. It exposes a REST API, typically via a Unix socket or a TCP port. The `SynergyStudioServer` interacts with this API to create, manage, and execute commands within isolated Worker Containers. The containers are generally ephemeral, created for a specific execution task and subsequently removed.
 *   The **Workspace Directory** resides on the Server host's filesystem. The Server performs standard file I/O operations within these directories to manage the session's code and artifacts. Data is copied from the Workspace Directory into Worker Containers before execution.
 
-![Application-graph](application-graph.png)
+![Application-graph](img/application-graph.png)
 
 **3.2. Technology Stack**
 
