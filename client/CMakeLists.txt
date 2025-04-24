@@ -14,8 +14,8 @@ target_sources(SynergyStudioClient PRIVATE
     # src/MainWindow.cpp
     # src/MainWindow.h
     # src/MainWindow.ui
-    # src/SslClient.cpp
-    # src/SslClient.h
+    src/SslClient.cpp
+    include/SslClient.h
     # src/FileTreeView.cpp
     # src/FileTreeView.h
     # src/EditorView.cpp
@@ -35,6 +35,8 @@ target_link_libraries(SynergyStudioClient PRIVATE
     Qt6::Widgets
     Qt6::Network
     synergy_protocol # Link against the common library
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 # --- Add MinGW specific libraries ONLY on Windows for GUI ---

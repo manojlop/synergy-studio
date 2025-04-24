@@ -42,6 +42,8 @@ def main():
     
     if args.debug:
         cmake_command.append("-DCMAKE_BUILD_TYPE=Debug")
+        cmake_command.append("-DCMAKE_RULE_MESSAGES:BOOL=OFF")
+        cmake_command.append("-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON")
 
     if args.googletest:
         cmake_command.append("-DBUILD_TESTING=ON")

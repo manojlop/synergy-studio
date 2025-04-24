@@ -61,7 +61,7 @@ def main():
         build_command.append("-dbg")
 
       if args.googletest:
-          run_command.append("-gt")
+        build_command.append("-gt")
 
       # Run the build script
       print(f"Running build script: {' '.join(build_command)}")
