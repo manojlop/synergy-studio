@@ -10,6 +10,8 @@
 #include <QFile>
 #include <QDebug>
 
+#include "synergy_protocol/MessageFactory.h"
+
 class SslServer : public QSslServer {
   Q_OBJECT
 public:

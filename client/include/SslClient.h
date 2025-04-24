@@ -10,6 +10,8 @@
 #include <QFile> // For loading ca certificate
 #include <QSslCipher>
 
+#include "synergy_protocol/MessageFactory.h"
+
 class SslClient : public QObject {
   Q_OBJECT
 public:
